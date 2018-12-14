@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace md1_queue
 {
     class Program
     {
+        /*
         public static double fact(double n)
         {
             if (n == 1)
@@ -16,9 +18,53 @@ namespace md1_queue
                 return 1;
             return n * fact(n - 1);
         }
+        */
+
+        public static void Log()
+        {
+            //Console.WriteLine("Thread {0} Start", Thread.CurrentThread.Name);
+            Thread.Sleep(1);
+            //Console.WriteLine("Thread {0} Stop", Thread.CurrentThread.Name);
+        }
 
         static void Main(string[] args)
         {
+
+            while (1==1)
+            {
+                Console.Clear();
+                double lambda = 1; //8.0 / 24.0;
+                double tn = 10.0;
+                double t = 0.0;
+                double n = 0.0;
+
+                Random rand = new Random();
+                List<double> S = new List<double>();
+
+                while (t < tn)
+                {
+                    double r = rand.NextDouble();//rand.Next() % 2;
+                    t = t + (-1 / lambda) * Math.Log(r);
+                    n = n + 1;
+                    S.Add(t);
+                    Console.WriteLine("#{0} {1}", n, t);
+                }
+
+                for (int i = 0; i < S.Count; i++)
+                {
+                    Thread myThread = new Thread(Log);
+                    myThread.Name = i.ToString();
+                    myThread.Start();
+                }
+
+                Console.WriteLine("labda = {0}", lambda);
+                Console.WriteLine("");
+
+                Console.Write("\nPress any key to continue... ");
+                Console.ReadKey();
+            }
+
+            /*
             Console.Write("Число каналов n = ");
             double n = Double.Parse(Console.ReadLine());
 
@@ -89,6 +135,7 @@ namespace md1_queue
 
             Console.Write("\nPress any key to continue... ");
             Console.ReadKey();
+            */
         }
     }
 }
