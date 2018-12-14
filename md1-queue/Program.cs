@@ -7,62 +7,140 @@ using System.Threading;
 
 namespace md1_queue
 {
-    class Program
+    class Client
     {
         /*
-        public static double fact(double n)
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+
+        public string FullName
         {
-            if (n == 1)
-                return n;
-            if (n == 0)
-                return 1;
-            return n * fact(n - 1);
+            get
+            {
+                return FirstName + " " + LastName;
+            }
         }
         */
+        public string FullName { get; set; }
 
-        public static void Log()
+        static string GetFirstName()
         {
-            //Console.WriteLine("Thread {0} Start", Thread.CurrentThread.Name);
-            Thread.Sleep(1);
-            //Console.WriteLine("Thread {0} Stop", Thread.CurrentThread.Name);
+            List<string> names = new List<string>();
+            names.Add("Вася");
+            names.Add("Женя");
+            names.Add("Саня");
+            names.Add("Коля");
+            Random rand = new Random();
+            return names[(rand.Next() % names.Count())];
         }
 
-        static void Main(string[] args)
+        static string GetLastName()
+        {
+            List<string> names = new List<string>();
+            names.Add("Иванов");
+            names.Add("Петров");
+            names.Add("Сидоров");
+            names.Add("Кароль");
+            Random rand = new Random();
+            return names[(rand.Next() % names.Count())];
+        }
+
+        public Client()
+        {
+            //this.FirstName = GetFirstName();
+            //this.LastName = GetLastName();
+        }
+    }
+
+    class md1
+    {
+        private Queue<Client> queue { get; set; }
+        public double lambda { get; set; }
+        public double tn { get; set; }
+        public int n { get; set; }
+        public int m { get; set; }
+        public int w { get; set; }
+        static Semaphore sem { get; set; }
+        private int Count { get; set; }
+
+        private void doWork()
+        {
+            //Count++;
+            sem.WaitOne();
+            Console.WriteLine("{0} Start {1} {2}", DateTime.Now, Thread.CurrentThread.Name, Count);
+            Thread.Sleep(w);
+            sem.Release();
+            Count--;
+            Console.WriteLine("{0} Stop {1} {2}", DateTime.Now, Thread.CurrentThread.Name, Count);
+        }
+
+        public md1(double lambda = 1, double tn = 10, int n = 3, int m = 6, int w = 5000)
+        {
+            this.lambda = lambda;
+            this.tn = tn;
+            this.n = n;
+            this.m = m;
+            this.w = w;
+            Count = 0;
+            queue = new Queue<Client>(m);
+            sem = new Semaphore(n, n);
+        }
+
+        public void addClient(Client client)
+        {
+            if (Count < m)
+            {
+                Count++;
+                Console.WriteLine("{0} Add {1} {2}", DateTime.Now, client.FullName, Count);
+                queue.Enqueue(client);
+                Exec();
+            }
+            else
+            {
+                Console.WriteLine("{0} Abort {1} {2}", DateTime.Now, client.FullName, Count);
+            }
+        }
+
+        private void Exec()
+        {
+            Thread thread = new Thread(doWork);
+            thread.Name = queue.Dequeue().FullName;
+            thread.Start();
+        }
+
+        public void GenPoisson()
+        {
+            double t = 0.0;
+            int index = 0;
+            Random rand = new Random();
+            while (t < tn)
+            {
+                double tau = (-1 / lambda) * Math.Log(rand.NextDouble());
+                t = t + tau;
+                Client client = new Client();
+                client.FullName = index.ToString();
+                //Console.WriteLine("{0} Generate {1}", DateTime.Now, client.FullName);
+                addClient(client);
+                Thread.Sleep((int)tau * 1000);
+                index++;
+            }
+        }
+
+        public void GenArcSin()
         {
 
-            while (1==1)
-            {
-                Console.Clear();
-                double lambda = 1; //8.0 / 24.0;
-                double tn = 10.0;
-                double t = 0.0;
-                double n = 0.0;
+        }
+    }
 
-                Random rand = new Random();
-                List<double> S = new List<double>();
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            md1 md = new md1();
+            md.GenPoisson();
 
-                while (t < tn)
-                {
-                    double r = rand.NextDouble();//rand.Next() % 2;
-                    t = t + (-1 / lambda) * Math.Log(r);
-                    n = n + 1;
-                    S.Add(t);
-                    Console.WriteLine("#{0} {1}", n, t);
-                }
-
-                for (int i = 0; i < S.Count; i++)
-                {
-                    Thread myThread = new Thread(Log);
-                    myThread.Name = i.ToString();
-                    myThread.Start();
-                }
-
-                Console.WriteLine("labda = {0}", lambda);
-                Console.WriteLine("");
-
-                Console.Write("\nPress any key to continue... ");
-                Console.ReadKey();
-            }
+            //Console.Write("\nPress any key to continue... ");
+            Console.ReadKey();
 
             /*
             Console.Write("Число каналов n = ");
