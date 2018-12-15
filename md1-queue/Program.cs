@@ -28,13 +28,13 @@ namespace md1_queue
             //Count++;
             sem.WaitOne();
             Console.WriteLine("{0} Start {1} {2}", DateTime.Now, Thread.CurrentThread.Name, Count);
-            Thread.Sleep((int)w);
+            Thread.Sleep((int)w * 1000);
             sem.Release();
             Count--;
             Console.WriteLine("{0} Stop {1} {2}", DateTime.Now, Thread.CurrentThread.Name, Count);
         }
 
-        public md1(double lambda = 1, double tn = 10, double n = 3, double m = 6, double w = 5000)
+        public md1(double lambda = 1, double tn = 10, double n = 3, double m = 6, double w = 5)
         {
             this.lambda = lambda;
             this.tn = tn;
@@ -88,7 +88,21 @@ namespace md1_queue
 
         public void GenArcSin()
         {
-
+            double t = 0.0;
+            int index = 0;
+            Random rand = new Random();
+            while (t < tn)
+            {
+                //double tau = (-1 / lambda) * Math.Log(rand.NextDouble());
+                double tau = (1 / w) + lambda * Math.Sin(Math.PI * (rand.NextDouble() - 0.5));
+                t = t + tau;
+                Client client = new Client();
+                client.FullName = index.ToString();
+                //Console.WriteLine("{0} Generate {1}", DateTime.Now, client.FullName);
+                addClient(client);
+                Thread.Sleep((int)tau * 1000);
+                index++;
+            }
         }
     }
 
@@ -165,8 +179,10 @@ namespace md1_queue
             Console.WriteLine("T = {0}", t0);
             Console.WriteLine();
 
-            md1 md = new md1(lambda, tn, n, m, t * 1000);
+            md1 md = new md1(lambda, tn, n, m, t);
             md.GenPoisson();
+            //md.GenArcSin();
+            
             
 
             //Console.Write("\nPress any key to continue... ");
