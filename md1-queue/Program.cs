@@ -208,8 +208,8 @@ namespace md1_queue
             double t0 = ts + tl;
             Console.WriteLine("T = {0}", t0);
             Console.WriteLine();
-            log.Add("");
             log.Add("t0 = " + t0.ToString());
+            log.Add("");
 
             System.IO.File.WriteAllLines(@"./log.txt", log);
 
