@@ -23,21 +23,23 @@ namespace md1_queue
         static Semaphore sem { get; set; }
         private int Count { get; set; }
         public List<string> log { get; set; }
+        //private List<double>
         
         ~md1()
         {
             System.IO.File.WriteAllLines(@"./log.txt", log);
-            Console.Write("\nPress any key to continue... ");
-            Console.ReadKey();
+            //Console.Write("\nPress any key to continue... ");
+            //Console.ReadKey();
         }
 
         private void doWork()
         {
             //Count++;
             sem.WaitOne();
-            Console.WriteLine("{0} Start {1} {2}", DateTime.Now, Thread.CurrentThread.Name, Count);
-            log.Add(DateTime.Now + " Start " + Thread.CurrentThread.Name + " " + Count);
-            Thread.Sleep((int)w * 1000);
+            double ts = GenPoisson(1.0/w);
+            Console.WriteLine("{0} Start {1} {2} {3}", DateTime.Now, Thread.CurrentThread.Name, Count, ts);
+            log.Add(DateTime.Now + " Start " + Thread.CurrentThread.Name + " " + Count + " " + ts);
+            Thread.Sleep((int)ts * 1000);
             sem.Release();
             Count--;
             Console.WriteLine("{0} Stop {1} {2}", DateTime.Now, Thread.CurrentThread.Name, Count);
@@ -80,14 +82,14 @@ namespace md1_queue
             thread.Start();
         }
 
-        public void GenPoisson()
+        public void Start()
         {
             double t = 0.0;
             int index = 0;
             Random rand = new Random();
             while (t < tn)
             {
-                double tau = (-1 / lambda) * Math.Log(rand.NextDouble());
+                double tau = GenPoisson(lambda);
                 t = t + tau;
                 Client client = new Client();
                 client.FullName = index.ToString();
@@ -98,22 +100,16 @@ namespace md1_queue
             }
         }
 
-        public void GenArcSin()
+        public double GenPoisson(double value)
         {
-            double t = 0.0;
-            int index = 0;
             Random rand = new Random();
-            while (t < tn)
-            {
-                double tau = (1 / w) + lambda * Math.Sin(Math.PI * (rand.NextDouble() - 0.5));
-                t = t + tau;
-                Client client = new Client();
-                client.FullName = index.ToString();
-                //Console.WriteLine("{0} Generate {1}", DateTime.Now, client.FullName);
-                addClient(client);
-                Thread.Sleep((int)tau * 1000);
-                index++;
-            }
+            return (-1.0 / value) * Math.Log(rand.NextDouble());
+        }
+
+        public double GenArcSin()
+        {
+            Random rand = new Random();
+            return (1.0 / w) + lambda * Math.Sin(Math.PI * (rand.NextDouble() - 0.5));
         }
     }
 
@@ -175,7 +171,7 @@ namespace md1_queue
 
             double pr = (Math.Pow(n, n) / fact(n)) * Math.Pow(psi, n + m) * p0;
             Console.WriteLine("pr = {0}", pr);
-            log.Add("p0 = " + p0.ToString());
+            log.Add("pr = " + p0.ToString());
 
             double q = 1 - pr;
             Console.WriteLine("Q = {0}", q);
@@ -215,9 +211,9 @@ namespace md1_queue
 
             md1 md = new md1(lambda, tn, n, m, t);
             md.log = log;
-            md.GenPoisson();
-            //md.GenArcSin();
-  
+            md.Start();
+            Console.ReadKey();
+
         }
     }
 }
