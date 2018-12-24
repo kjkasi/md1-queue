@@ -14,6 +14,8 @@ namespace md1_queue
 
     class md1
     {
+        public enum Type { Poisson, ArcSin };
+        public Type type { get; set; }
         private Queue<Client> queue { get; set; }
         public double lambda { get; set; }
         public double tn { get; set; }
@@ -115,7 +117,15 @@ namespace md1_queue
         {
             //Count++;
             sem.WaitOne();
-            double ts = GenPoisson(1.0/w);
+            double ts;
+            if (type == Type.Poisson)
+            {
+                ts = GenPoisson(1.0 / w);
+            }
+            else
+            {
+                ts = GenArcSin(1.0 / w);
+            }
             this.ts1.Add(ts);
             Console.WriteLine("{0} Start {1} {2} {3}", DateTime.Now, Thread.CurrentThread.Name, Count, ts);
             log.Add(DateTime.Now + " Start " + Thread.CurrentThread.Name + " " + Count + " " + ts);
@@ -126,7 +136,7 @@ namespace md1_queue
             log.Add(DateTime.Now + " Stop " + Thread.CurrentThread.Name + " " + Count);
         }
 
-        public md1(double lambda = 1, double tn = 10, double n = 3, double m = 6, double w = 5)
+        public md1(double lambda, double tn, double n, double m, double w, Type tp)
         {
             this.lambda = lambda;
             this.tn = tn;
@@ -139,6 +149,7 @@ namespace md1_queue
             ls1 = new List<double>();
             ts1 = new List<double>();
             rand = new Random();
+            type = tp;
         }
 
         public void addClient(Client client)
@@ -191,9 +202,9 @@ namespace md1_queue
             return (-1 / value) * Math.Log(rand.NextDouble());
         }
 
-        public double GenArcSin()
+        public double GenArcSin(double value)
         {
-            return (1.0 / w) + lambda * Math.Sin(Math.PI * (rand.NextDouble() - 0.5));
+            return (1.0 / value) + lambda * Math.Sin(Math.PI * (rand.NextDouble() - 0.5));
         }
     }
 
@@ -225,7 +236,7 @@ namespace md1_queue
 
             //System.IO.File.WriteAllLines(@"./log.txt", log);
 
-            md1 md = new md1(lambda, tn, n, m, t);
+            md1 md = new md1(lambda, tn, n, m, t, md1.Type.Poisson); //Тут выбираешь тип
             md.log = log;
             md.Start();
             //Console.ReadKey();
